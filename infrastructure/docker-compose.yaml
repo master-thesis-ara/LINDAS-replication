@@ -1,0 +1,16 @@
+version: "3"
+
+services:
+  apache-jena-fuseki:
+    extends:
+      file: ../jena-fuseki-docker-5.2.0/docker-compose.yaml
+      service: fuseki
+
+  yasgui:
+    image: erikap/yasgui
+    ports:
+      - "3031:80"
+    environment:
+      DEFAULT_SPARQL_ENDPOINT: "http://localhost:3030/ds/query"
+    depends_on:
+      - apache-jena-fuseki
