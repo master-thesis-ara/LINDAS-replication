@@ -1,16 +1,41 @@
 version: "3"
 
 services:
-  apache-jena-fuseki:
-    extends:
-      file: ../jena-fuseki-docker-5.2.0/docker-compose.yaml
-      service: fuseki
+  # TODO stardog
+
+  fuseki:
+    image: stain/jena-fuseki
+    container_name: fuseki
+    ports:
+      - "3030:3030"
+    volumes:
+      - ../data/databases:/fuseki/databases
+      - fuseki-data:/fuseki
+    environment:
+      - ADMIN_PASSWORD=admin
+      - JVM_ARGS=-Xmx2g
+      - FUSEKI_DATASET_1=electricityprice
+      - TDB=2
 
   yasgui:
     image: erikap/yasgui
     ports:
       - "3031:80"
     environment:
-      DEFAULT_SPARQL_ENDPOINT: "http://localhost:3030/ds/query"
+      DEFAULT_SPARQL_ENDPOINT: "http://localhost:3030/ds/sparql"
     depends_on:
-      - apache-jena-fuseki
+      - fuseki
+
+  graph-explorer:
+    image: public.ecr.aws/neptune/graph-explorer:latest-SNAPSHOT
+    ports:
+      - "80:80"
+    environment:
+      HOST: localhost
+      PROXY_SERVER_HTTPS_CONNECTION: false
+      GRAPH_EXP_HTTPS_CONNECTION: false
+    depends_on:
+      - fuseki
+
+volumes:
+  fuseki-data:

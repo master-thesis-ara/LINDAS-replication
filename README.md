@@ -53,11 +53,19 @@ services:
       - ./databases:/fuseki/databases
 ```
 
-3. Run the following commands from the `infrastructure` directory:
+4. Modify the Dockerfile by setting the JAVA_VERSION to 21. Ensure it is like the following:
+
+```dockerfile
+[...]
+ARG JAVA_VERSION=21
+[...]
+```
+
+5. Run the following commands from the root directory:
 
 ```bash
-mkdir -p ../jena-fuseki-docker-5.2.0/databases/DB2
-tdb2.tdbloader --loc ../jena-fuseki-docker-5.2.0/databases/DB2 ../datasets/electricityprice.ttl
+mkdir -p ./data/databases
+docker run --rm -v "$(pwd)":/tmp stain/jena tdb2.tdbloader --loc /tmp/data/databases/electricityprice /tmp/data/datasets/electricityprice.ttl
 ```
 
 ## Run the infrastructure
