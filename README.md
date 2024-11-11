@@ -8,20 +8,21 @@
 ### Median electricity tariff per canton
 
 1. Download the dataset from [Median electricity tariff per canton](https://opendata.swiss/en/dataset/median-strompreis-per-kanton) by running the following command:
-   ```bash
-    curl -X POST \
-        -H "Content-Type: application/sparql-query" \
-        --data "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          CONSTRUCT {
-            ?s ?p ?o .
-          }
-          FROM <https://lindas.admin.ch/elcom/electricityprice>
-          WHERE {
-            ?s ?p ?o .
-          }" \
-        https://lindas.admin.ch/query > electricityprice.ttl
-   ```
+
+```bash
+curl -X POST \
+    -H "Content-Type: application/sparql-query" \
+    --data "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      CONSTRUCT {
+        ?s ?p ?o .
+      }
+      FROM <https://lindas.admin.ch/elcom/electricityprice>
+      WHERE {
+        ?s ?p ?o .
+      }" \
+    https://lindas.admin.ch/query > electricityprice.ttl
+```
 
 ## Choose a Triplestore
 
@@ -57,9 +58,14 @@ services:
 ```bash
 mkdir -p ../jena-fuseki-docker-5.2.0/databases/DB2
 tdb2.tdbloader --loc ../jena-fuseki-docker-5.2.0/databases/DB2 ../datasets/electricityprice.ttl
-
-docker compose up -d
 ```
+
+## Run the infrastructure
+
+- Run the following command from the `infrastructure` directory:
+  ```bash
+  docker compose up -d
+  ```
 
 ## Query the Triplestore
 
