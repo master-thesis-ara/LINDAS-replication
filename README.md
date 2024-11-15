@@ -1,139 +1,127 @@
-## Choose dataset
+# LINDAS Replication
 
-1. Go to [Swiss Open Data Portal](https://opendata.swiss/en/dataset?q=electric&linked_data=SPARQL&sort=score+desc%2C+metadata_modified+desc)
-2. Choose a dataset
-3. Go to `SPARQL Endpoint with graph preselection` of the `Resources` section
-4. Copy cURL command from share button
+## Table of Contents
 
-### Median electricity tariff per canton
+- [Requirements](#requirements)
+- [Setup](#setup)
+- [Working with Datasets](#working-with-datasets)
+  - [Setting up the Electricity Price Dataset](#setting-up-the-electricity-price-dataset)
+- [Triplestore Options](#triplestore-options)
+  - [Option 1: Apache Jena Fuseki](#option-1-apache-jena-fuseki)
+  - [Option 2: Virtuoso](#option-2-virtuoso)
+- [Example SPARQL Queries](#example-sparql-queries)
+  - [List Unique Dimensions](#list-unique-dimensions)
+  - [Tariff Analysis](#tariff-analysis)
 
-1. Download the dataset from [Median electricity tariff per canton](https://opendata.swiss/en/dataset/median-strompreis-per-kanton) by running the following command in the root directory:
+## Requirements
 
-   ```bash
-   curl -X POST \
-       -H "Content-Type: application/sparql-query" \
-       --data "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-         CONSTRUCT {
-           ?s ?p ?o .
-         }
-         FROM <https://lindas.admin.ch/elcom/electricityprice>
-         WHERE {
-           ?s ?p ?o .
-         }" \
-       https://lindas.admin.ch/query > ./data/datasets/electricityprice.ttl
-   ```
+- Docker and Docker Compose
+- cURL
 
-## Choose a Triplestore
+## Setup
 
-- [Apache Jena Fuseki](https://jena.apache.org)
-- [OpenLink Virtuoso](https://virtuoso.openlinksw.com)
+```bash
+git clone https://github.com/master-thesis-ara/LINDAS-replication.git
+cd LINDAS-replication
+mkdir -p ./data
+```
 
-### Apache Jena Fuseki
+## Working with Datasets
 
-1. Run the following commands from the root directory:
+### Setting up the Electricity Price Dataset
 
-   ```bash
-   mkdir -p ./data/databases
-   docker run --rm -v "$(pwd)":/tmp stain/jena tdb2.tdbloader --loc /tmp/data/databases/electricityprice /tmp/data/datasets/electricityprice.ttl
-   ```
+1. Create dataset directory:
 
-2. Spin up the fuseki infrastructure by running the `docker-compose-fuseki.yaml` file from the `infrastructure` directory:
+```bash
+mkdir -p ./data/datasets
+```
 
-   ```bash
-   docker compose -f docker-compose-fuseki.yaml up -d
-   ```
+2. Download the dataset:
 
-3. Visualize the triplestore by navigating to the local instance of graph-explorer running at [http://localhost:80/explorer](http://localhost:80/explorer)
+```bash
+curl -X POST \
+  -H "Content-Type: application/sparql-query" \
+  --data "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    CONSTRUCT { ?s ?p ?o . }
+    FROM <https://lindas.admin.ch/elcom/electricityprice>
+    WHERE { ?s ?p ?o . }" \
+  https://lindas.admin.ch/query > ./data/datasets/electricityprice.ttl
+```
 
-4. Set up a connection to the triplestore by providing the following details:
+## Triplestore Options
 
-   - **Name**: <name-of-your-choice>
-   - **Graph Type**: SPARQL - RDF (Resource Description Framework)
-   - **Public or Proxy Endpoint**: http://localhost:3030/electricityprice
+### Option 1: Apache Jena Fuseki
 
-5. Query the triplestore by navigating to the local instance of YASGUI running at [http://localhost:3000](http://localhost:3000)
+1. Load data:
 
-### Virtuoso
+```bash
+mkdir -p ./data/databases
+docker run --rm -v "$(pwd)":/tmp stain/jena tdb2.tdbloader --loc /tmp/data/databases/electricityprice /tmp/data/datasets/electricityprice.ttl
+```
 
-1. Spin up the virtuoso infrastructure by running the `docker-compose-virtuoso.yaml` file from the `infrastructure` directory:
+2. Start services:
 
-   ```bash
-   docker compose -f docker-compose-virtuoso.yaml up -d
-   ```
+```bash
+docker compose -f ./infrastructure/docker-compose-fuseki.yaml up -d
+```
 
-2. Load the dataset into the triplestore by running the following command:
+Access points:
 
-   ```bash
-   docker exec -it virtuoso isql 1111 dba admin exec="DB.DBA.TTLP(file_to_string_output('/usr/share/proj/electricityprice.ttl'), '', 'http://example.org/graph', 0); rdf_loader_run();"
-   ```
+- YASGUI Query Interface: [http://localhost:3000](http://localhost:3000)
+- Fuseki Admin: [http://localhost:3030/](http://localhost:3030/) (User: `admin`, Password: `admin`)
+- Graph Explorer: [http://localhost:80/explorer](http://localhost:80/explorer)
 
-3. Query the triplestore by navigating to the local instance of [Virtuoso SPARQL Query Editor](http://localhost:3030/sparql)
+### Option 2: Virtuoso
 
-## Query the Triplestore
+1. Start services:
 
-- All unique dimensions:
+```bash
+docker compose -f ./infrastructure/docker-compose-virtuoso.yaml up -d
+```
 
-  ```bash
-  PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+2. Load data:
 
-  SELECT DISTINCT ?dimension WHERE {
-    ?observation <https://cube.link/observation> ?obs .
-    ?obs ?dimension ?value .
-  }
-  ```
+```bash
+docker exec -it virtuoso isql 1111 dba admin exec="DB.DBA.TTLP(file_to_string_output('/usr/share/proj/electricityprice.ttl'), '', 'http://example.org/graph', 0); rdf_loader_run();"
+```
 
-- Total tariff per canton:
+Access point:
 
-  ```bash
-  PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+- Query Editor: [http://localhost:3030/sparql](http://localhost:3030/sparql)
 
-  SELECT ?canton ?total WHERE {
-    ?observation <https://cube.link/observation> ?obs .
-    ?obs <https://energy.ld.admin.ch/elcom/electricityprice/dimension/canton> ?canton .
-    ?obs <https://energy.ld.admin.ch/elcom/electricityprice/dimension/total> ?total .
-  }
-  ```
+## Example SPARQL Queries
 
-- Total tariff per municipality:
+### List Unique Dimensions
 
-  ```bash
-  PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+```sparql
+SELECT DISTINCT ?dimension WHERE {
+  ?observation <https://cube.link/observation> ?obs .
+  ?obs ?dimension ?value .
+}
+```
 
-  SELECT ?municipality ?total WHERE {
-    ?observation <https://cube.link/observation> ?obs .
-    ?obs <https://energy.ld.admin.ch/elcom/electricityprice/dimension/municipality> ?municipality .
-    ?obs <https://energy.ld.admin.ch/elcom/electricityprice/dimension/total> ?total .
-  }
-  ```
+### Tariff Analysis
 
-- Total tariff per canton per period:
+```sparql
+# Canton Total Tariffs
+SELECT ?canton ?total WHERE {
+  ?observation <https://cube.link/observation> ?obs .
+  ?obs <https://energy.ld.admin.ch/elcom/electricityprice/dimension/canton> ?canton .
+  ?obs <https://energy.ld.admin.ch/elcom/electricityprice/dimension/total> ?total .
+}
 
-  ```bash
-  PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+# Municipality Total Tariffs
+SELECT ?municipality ?total WHERE {
+  ?observation <https://cube.link/observation> ?obs .
+  ?obs <https://energy.ld.admin.ch/elcom/electricityprice/dimension/municipality> ?municipality .
+  ?obs <https://energy.ld.admin.ch/elcom/electricityprice/dimension/total> ?total .
+}
 
-  SELECT ?canton ?period ?total WHERE {
-    ?observation <https://cube.link/observation> ?obs .
-    ?obs <https://energy.ld.admin.ch/elcom/electricityprice/dimension/canton> ?canton .
-    ?obs <https://energy.ld.admin.ch/elcom/electricityprice/dimension/period> ?period .
-    ?obs <https://energy.ld.admin.ch/elcom/electricityprice/dimension/total> ?total .
-  }
-  ```
-
-- Median tariff per canton:
-
-  ```bash
-  PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-
-  SELECT ?canton (AVG(?total) AS ?median) WHERE {
-    ?observation <https://cube.link/observation> ?obs .
-    ?obs <https://energy.ld.admin.ch/elcom/electricityprice/dimension/canton> ?canton .
-    ?obs <https://energy.ld.admin.ch/elcom/electricityprice/dimension/total> ?total .
-  }
-  GROUP BY ?canton
-  ```
+# Canton Median Tariffs
+SELECT ?canton (AVG(?total) AS ?median) WHERE {
+  ?observation <https://cube.link/observation> ?obs .
+  ?obs <https://energy.ld.admin.ch/elcom/electricityprice/dimension/canton> ?canton .
+  ?obs <https://energy.ld.admin.ch/elcom/electricityprice/dimension/total> ?total .
+}
+GROUP BY ?canton
+```
