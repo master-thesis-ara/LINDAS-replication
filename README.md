@@ -184,7 +184,7 @@ Access point:
 - Query Editor: [http://localhost:3030/sparql](http://localhost:3030/sparql)
 - Virtuoso Conductor: [http://localhost:3030/conductor](http://localhost:3030/conductor) (USER: `dba`, PASSWORD: `admin`)
 
-## Example SPARQL Queries
+## Example SPARQL Queries (Electricity Price Dataset)
 
 ### List Unique Dimensions
 

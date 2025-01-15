@@ -9,7 +9,7 @@ services:
     environment:
       - ADMIN_PASSWORD=admin
       - JVM_ARGS=-Xmx2g
-      - FUSEKI_DATASET_1=electricityprice
+      - FUSEKI_DATASET_1=<dataset_name>
       - TDB=2
     volumes:
       - ../data/fuseki/databases:/fuseki/databases
@@ -21,7 +21,7 @@ services:
     ports:
       - "3000:80"
     environment:
-      DEFAULT_SPARQL_ENDPOINT: "http://localhost:3030/electricityprice/sparql"
+      DEFAULT_SPARQL_ENDPOINT: "http://localhost:3030/<dataset_name>/sparql"
 
   graph-explorer:
     image: public.ecr.aws/neptune/graph-explorer:latest-SNAPSHOT

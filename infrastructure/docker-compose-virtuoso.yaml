@@ -7,7 +7,7 @@ services:
     environment:
       DBA_USER: dba
       DBA_PASSWORD: admin
-      DEFAULT_GRAPH: "http://example.org/electricityprice"
+      DEFAULT_GRAPH: "http://example.org/<dataset_name>"
     ports:
       - "3030:8890" # HTTP/SPARQL port
       - "1111:1111" # SQL database port
