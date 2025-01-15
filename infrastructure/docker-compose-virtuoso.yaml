@@ -5,8 +5,9 @@ services:
     image: openlink/virtuoso-opensource-7
     container_name: virtuoso
     environment:
+      DBA_USER: dba
       DBA_PASSWORD: admin
-      DEFAULT_GRAPH: "http://example.org/graph"
+      DEFAULT_GRAPH: "http://example.org/electricityprice"
     ports:
       - "3030:8890" # HTTP/SPARQL port
       - "1111:1111" # SQL database port

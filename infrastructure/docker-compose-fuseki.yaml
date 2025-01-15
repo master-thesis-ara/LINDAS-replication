@@ -12,7 +12,7 @@ services:
       - FUSEKI_DATASET_1=electricityprice
       - TDB=2
     volumes:
-      - ../data/databases:/fuseki/databases
+      - ../data/fuseki/databases:/fuseki/databases
       - fuseki-data:/fuseki
 
   yasgui:
