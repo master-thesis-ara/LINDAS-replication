@@ -98,7 +98,7 @@ mkdir -p ./data
    ```bash
    mkdir -p ./data/fuseki/databases
 
-   docker run --rm -v "$(pwd)":/tmp stain/jena tdb2.tdbloader --loc /tmp/data/databases/<dataset_name> /tmp/data/datasets/<dataset_name>.ttl
+   docker run --rm -v "$(pwd):/tmp" stain/jena tdb2.tdbloader --loc /tmp/data/fuseki/databases/<dataset_name> /tmp/data/datasets/<dataset_name>.ttl
    ```
 
 2. Updated the `infrastructure/docker-compose-fuseki.yaml` file by replacing `<dataset_name>` with the name of the dataset:
