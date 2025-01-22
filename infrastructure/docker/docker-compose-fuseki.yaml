@@ -1,0 +1,76 @@
+version: "3"
+
+services:
+  fuseki:
+    image: stain/jena-fuseki
+    container_name: fuseki
+    ports:
+      - "3030:3030"
+    environment:
+      - ADMIN_PASSWORD=admin
+      - JVM_ARGS=-Xmx2g
+      - FUSEKI_DATASET_1=electricityprice
+      - TDB=2
+    volumes:
+      - ../data/fuseki/databases:/fuseki/databases
+      - fuseki-data:/fuseki
+    networks:
+      - monitoring  # Explicitly add Fuseki to the monitoring network
+
+  yasgui:
+    image: erikap/yasgui
+    container_name: yasgui
+    ports:
+      - "3000:80"
+    environment:
+      DEFAULT_SPARQL_ENDPOINT: "http://fuseki:3030/electricityprice/sparql"  # Use service name `fuseki`
+    networks:
+      - monitoring  # Explicitly add Yasgui to the monitoring network
+
+  graph-explorer:
+    image: public.ecr.aws/neptune/graph-explorer:latest-SNAPSHOT
+    container_name: graph-explorer
+    ports:
+      - "80:80"
+    environment:
+      HOST: fuseki  # Use the service name for Fuseki
+      PROXY_SERVER_HTTPS_CONNECTION: false
+      GRAPH_EXP_HTTPS_CONNECTION: false
+    networks:
+      - monitoring  # Explicitly add Graph-Explorer to the monitoring network
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"  # Prometheus Web UI
+    volumes:
+      - ../prometheus.yaml:/etc/prometheus/prometheus.yml  # Ensure this file correctly targets Fuseki
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    networks:
+      - monitoring  # Prometheus on the same network as other services
+    depends_on:
+      - fuseki  # Ensure Prometheus starts after Fuseki
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3001:3000"  # Grafana Web UI
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus  # Grafana should start after Prometheus
+    networks:
+      - monitoring  # Ensure Grafana is connected to the same network
+
+volumes:
+  fuseki-data:
+  grafana-data:
+
+networks:
+  monitoring:
+    driver: bridge  # Define a bridge network for the services to communicate

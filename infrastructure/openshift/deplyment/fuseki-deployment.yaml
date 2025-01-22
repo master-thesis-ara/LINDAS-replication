@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fuseki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fuseki
+  template:
+    metadata:
+      labels:
+        app: fuseki
+    spec:
+      containers:
+        - name: fuseki
+          image: stain/jena-fuseki
+          ports:
+            - containerPort: 3030
+          env:
+            - name: ADMIN_PASSWORD
+              value: "admin"
+            - name: JVM_ARGS
+              value: "-Xmx2g"
+            - name: FUSEKI_DATASET_1
+              value: "electricityprice"
+            - name: TDB
+              value: "2"
+          volumeMounts:
+            - name: fuseki-data
+              mountPath: /fuseki/databases
+            - name: fuseki-config
+              mountPath: /fuseki
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "100m"
+            limits:
+              memory: "500Mi"
+              cpu: "500m"
+      volumes:
+        - name: fuseki-data
+          persistentVolumeClaim:
+            claimName: fuseki-data-pvc
+        - name: fuseki-config
+          emptyDir: {}
