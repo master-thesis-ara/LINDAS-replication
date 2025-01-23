@@ -23,13 +23,15 @@ spec:
             - name: JVM_ARGS
               value: "-Xmx2g"
             - name: FUSEKI_DATASET_1
-              value: "electricityprice"
+              value: "electricityprice-canton"
             - name: TDB
               value: "2"
           volumeMounts:
-            - name: fuseki-data
+            - name: fuseki-database
               mountPath: /fuseki/databases
-            - name: fuseki-config
+            - name: fuseki-data
+              mountPath: /fuseki/data
+            - name: fuseki
               mountPath: /fuseki
           resources:
             requests:
@@ -38,9 +40,28 @@ spec:
             limits:
               memory: "500Mi"
               cpu: "500m"
+      initContainers:
+        - name: download-dataset
+          image: stain/jena-fuseki
+          command:
+            - "sh"
+            - "-c"
+            - /scripts/load-dataset.sh
+          volumeMounts:
+            - name: fuseki-database
+              mountPath: /fuseki/databases
+            - name: fuseki-data
+              mountPath: /fuseki/data
+            - name: fuseki-scripts
+              mountPath: /scripts
       volumes:
-        - name: fuseki-data
-          persistentVolumeClaim:
-            claimName: fuseki-data-pvc
-        - name: fuseki-config
+        - name: fuseki
           emptyDir: {}
+        - name: fuseki-database
+          emptyDir: {}
+        - name: fuseki-data
+          emptyDir: {}
+        - name: fuseki-scripts
+          configMap:
+            name: fuseki-scripts
+            defaultMode: 0755

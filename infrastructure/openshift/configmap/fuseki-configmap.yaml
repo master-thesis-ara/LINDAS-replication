@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fuseki-scripts
+data:
+  load-dataset.sh: |
+    #!/bin/sh
+    echo "Downloading electricityprice-canton.ttl..."
+    curl -X POST \
+      -H "Content-Type: application/sparql-query" \
+      -H "Accept: text/turtle" \
+      --data "PREFIX schema: <http://schema.org/>
+              CONSTRUCT {
+                <https://energy.ld.admin.ch/elcom/electricityprice-canton> ?p ?o.
+              }
+              FROM <https://lindas.admin.ch/elcom/electricityprice>
+              WHERE {
+                <https://energy.ld.admin.ch/elcom/electricityprice-canton> ?p ?o.
+              }" \
+    https://lindas.admin.ch/query > /fuseki/data/electricityprice-canton.ttl
+
+    echo "Download complete. Loading data into TDB2 database..."
+    # Run tdbloader2 to create the TDB2 database
+    /jena-fuseki/tdbloader2 --loc /fuseki/databases/electricityprice-canton /fuseki/data/electricityprice-canton.ttl
+    echo "Dataset loaded into TDB2 database."

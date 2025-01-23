@@ -1,0 +1,12 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: prometheus-route
+spec:
+  to:
+    kind: Service
+    name: prometheus
+  port:
+    targetPort: 9090
+  tls:
+    termination: edge
